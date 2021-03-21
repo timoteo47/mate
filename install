@@ -1,0 +1,120 @@
+#!/bin/bash
+
+# Set pip version and command based on name of script.
+PIP="pip3"
+PYTHON="python3"
+INSTALL_USER=${USER}
+HOME_DIR=${HOME}
+BUILD_DIR=`pwd`
+MATE_DIRECTORY="${HOME}/mate"
+
+create_mate_directories () {
+    # Create initial mate directories
+    mkdir -p ${MATE_DIRECTORY}
+    mkdir ${MATE_DIRECTORY}/builds
+    mkdir ${MATE_DIRECTORY}/data
+    mkdir ${MATE_DIRECTORY}/log
+}
+
+update_mate_directory_permissions () {
+    chown -R ${INSTALL_USER} ${MATE_DIRECTORY}
+    chmod -R  755 ${MATE_DIRECTORY}
+}
+
+install_requirements () {
+    # Install the required Python packages.
+    # All packages in requirements.txt are available in the
+    pip3 install ${INDEX_URL} -r requirements.txt  2>&1 > /dev/null
+}
+
+build_mate() {
+    python3 setup.py bdist_wheel 2>&1 > /dev/null
+}
+
+install_mate() {
+    pip3 install  --force-reinstall ${INDEX_URL} -U dist/*
+    # Install the command completion file
+#    cp mate-complete.sh /etc/bash_completion.d/
+}
+
+build_docs() {
+    # Make the docs using Sphinix
+    mkdir docs/_static
+    cd docs
+    make html
+    cd ..
+}
+
+copy_docs_to_mate_docs_directory() {
+    # Copy HTML docs to ${MATE_DIRECTORY}/docs.
+    echo "Deleting previous version of documentation in ${MATE_DIRECTORY}/docs."
+    rm -Rf ${MATE_DIRECTORY}/docs/*
+    echo "Copying docs to ${MATE_DIRECTORY}/docs"
+    cp -R docs/_build/html/* ${MATE_DIRECTORY}/docs
+}
+
+copy_docs_to_www_directory() {
+    # Copy HTML docs to /var/www/mate if /var/www exists.
+    if [  -d "/var/www" ]; then
+        if [-d "/var/www/mate" ]; then
+            echo "Deleting previous version of documentation in /var/www."
+            rm -Rf /var/www/mate
+        else
+            echo "Creating mate directory in /var/www."
+            mkdir /var/www/mate
+        echo "Copying docs to /var/www/mate"
+        cp -R docs/_build/html/* /var/www/mate
+        fi
+    fi
+}
+
+create_link_to_docs_on_desktop() {
+    # Create link to docs on Desktop
+    if [  -d "${HOME_DIR}/Desktop" ]; then
+        if [ -d "${HOME_DIR}/Desktop" ]; then
+            rm -Rf ${HOME_DIR}/Desktop/mate-docs.html
+        fi
+        ln -s ${MATE_DIRECTORY}/docs/index.html ${HOME_DIR}/Desktop/mate-docs.html
+    fi
+
+}
+
+
+upgrade() {
+    build_mate
+    install_mate
+    echo " Creating link to docs on Desktop ..."
+    update_mate_directory_permissions
+}
+
+install() {
+    echo " Creating the mate directories under ${MATE_DIRECTORY} ..."
+    create_mate_directories
+    echo " Updating permissions ..."
+    update_mate_directory_permissions
+    echo " Installing the required Python packages ..."
+    install_requirements
+    echo " Building mate package ..."
+    build_mate
+    echo " Installing mate package ..."
+    install_mate
+#     echo " Building the docs using Sphinx ..."
+#     build_docs
+#     echo " Copying docs to ${MATE_DIRECTORY}/docs ..."
+#     copy_docs_to_mate_docs_directory
+    echo " Updating permissions ..."
+    update_mate_directory_permissions
+}
+
+FULL_SCRIPT_NAME=$0
+SCRIPT_NAME=$(basename "$FULL_SCRIPT_NAME")
+INDEX_URL=""
+
+case "$SCRIPT_NAME" in
+        install)
+            echo "Installing mate ..."
+            COMMAND=install
+            ;;
+esac
+
+${COMMAND}
