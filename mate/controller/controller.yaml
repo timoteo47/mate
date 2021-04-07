@@ -1,0 +1,50 @@
+openapi: 3.0.0
+info:
+  title: X Academy ROV controller
+  version: 0.7.0
+  description: API to control ROV
+servers:
+  - url: 'http://127.0.0.1:5000'
+paths:
+  /motor:
+    get:
+        summary: Get motor status.
+        description: "Get motor status."
+        operationId: get_motor
+        responses:
+          '200':
+            description: Motor status.
+            content:
+              application/json:
+                schema:
+                  type: object
+    post:
+      summary: Set PWM value for motor.
+      description: >
+        Send PWM value for motor.
+      operationId: set_motor
+      requestBody:
+        description:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/motor_request'
+components:
+#  parameters:
+#    motor_id:
+#      in: path
+#      name: motor_id
+#      schema:
+#        type: integer
+#      required: true
+#      description: "."
+  schemas:
+    motor_request:
+      properties:
+        motorid:
+          type: integer
+          description: motor id
+        pwm:
+          type: integer
+          description: PWM.
