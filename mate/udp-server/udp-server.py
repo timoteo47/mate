@@ -1,6 +1,6 @@
 import socket
 import time
-
+import json
 localIP = "127.0.0.1"
 
 localPort = 20001
@@ -42,6 +42,10 @@ while (True):
         print("Rate == {} qps".format(rate))
         print(clientMsg)
         print(clientIP)
+        data = json.loads(message.decode('utf-8'))
+        print(data)
+
+
 
     # Sending a reply to client
 

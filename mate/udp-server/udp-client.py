@@ -16,6 +16,7 @@ UDPClientSocket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
 # Send to server using created UDP socket
 for i in range(0, 10000):
     send_message = json.dumps({'motorid': 1, 'pwm': i}).encode('utf-8')
+
     UDPClientSocket.sendto(send_message, serverAddressPort)
     msgFromServer = UDPClientSocket.recvfrom(bufferSize)
 
